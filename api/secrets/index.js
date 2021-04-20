@@ -1,3 +1,6 @@
+const jwtSecret = process.env.JWT_SECRET || 'keepitsecret'
+
+
 /**
   Fix this module so other modules can require JWT_SECRET into them.
   Use the || operator to fall back to the string "shh" to handle the situation
@@ -7,5 +10,5 @@
   developers cloning this repo won't be able to run the project as is.
  */
 module.exports = {
-
+  jwtSecret
 }
