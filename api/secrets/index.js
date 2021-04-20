@@ -1,4 +1,4 @@
-const jwtSecret = process.env.JWT_SECRET || 'keepitsecret'
+const JWT_SECRET = process.env.JWT_SECRET || 'keepitsecret'
 
 
 /**
@@ -10,5 +10,5 @@ const jwtSecret = process.env.JWT_SECRET || 'keepitsecret'
   developers cloning this repo won't be able to run the project as is.
  */
 module.exports = {
-  jwtSecret
+  JWT_SECRET
 }

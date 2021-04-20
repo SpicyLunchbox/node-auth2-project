@@ -1,6 +1,24 @@
+const { default: jwtDecode } = require("jwt-decode");
 const { JWT_SECRET } = require("../secrets"); // use this secret!
+const jwt = require('jsonwebtoken');
+const helpers = require('../users/users-model.js');
 
 const restricted = (req, res, next) => {
+  const token = req.headers.authorization
+
+  if(!token){
+    res.status(401).json({message:`Token required`})
+  }else{
+    jwt.verify(token,JWT_SECRET,(err,decoded) => {
+      if(err){
+        res.status(401).json({message:`Token invalid`})
+      }else{
+        req.decodedToken = decoded
+        next()
+      }
+    })
+  }
+
   /*
     If the user does not provide a token in the Authorization header:
     status 401
@@ -19,6 +37,12 @@ const restricted = (req, res, next) => {
 }
 
 const only = role_name => (req, res, next) => {
+  if(req.decodedToken.role_name != role_name){ // this may need to be written req.decodedToken.body or payload.role_name
+    res.status(403).json({message:`This is not for you`})
+  }else{
+    next()
+  }
+
   /*
     If the user does not provide a token in the Authorization header with a role_name
     inside its payload matching the role_name passed to this function as its argument:
@@ -33,6 +57,17 @@ const only = role_name => (req, res, next) => {
 
 
 const checkUsernameExists = (req, res, next) => {
+  helpers.findBy(req.body.username)
+    .then(user => {
+      if(!user){
+        res.status(401).json({message:`Invalid credentials`})
+      }else{
+        next()
+      }
+    })
+    .catch(err => {
+      res.status(500).json('Server error at middleware checkUsernameExists')
+    })
   /*
     If the username in req.body does NOT exist in the database
     status 401
@@ -44,6 +79,21 @@ const checkUsernameExists = (req, res, next) => {
 
 
 const validateRoleName = (req, res, next) => {
+  const trimmedRoleName = req.body.role_name.trim()
+  if(!req.body.role_name || trimmedRoleName === '') {
+    req.body.role_name = 'student'
+    next()
+  }else{
+    if(trimmedRoleName === 'admin'){
+      res.status(422).json({message:`Role name can not be admin`})
+    }else{
+      if(trimmedRoleName.length() > 32){
+        res.status(422).json({message:`Role name can not be longer than 32 chars`})
+      }else{
+        next()
+      }
+    }
+  }
   /*
     If the role_name in the body is valid, set req.role_name to be the trimmed string and proceed.
 
